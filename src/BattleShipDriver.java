@@ -77,7 +77,7 @@ public class BattleShipDriver {
     }
     private static void makeSpace(){
         for(int i = 0; i<15; i++) {
-            System.out.println("hello");
+            System.out.println();
         }
     }
 }
