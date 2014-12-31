@@ -2,6 +2,7 @@
  * Created by AJ on 12/23/14.
  */
 import java.util.Scanner;
+import java.util.Random;
 public class Player {
     private char[][] coordinateBoard = new char[10][10];
     private char[][] placedShipsBoard = new char[10][10];
@@ -15,11 +16,12 @@ public class Player {
      * Return - character 'M' if it was a miss, 'H' if it was a hit.
      */
     public char fireUpon(boolean computer){
-        boolean moveOn = true;
+        boolean moveOn;
         int xCord;
         int yCord;
         do {
-            Coordinate cord = computer == true? getCoordinate(true) : getCoordinate(false);
+            moveOn = true;
+            Coordinate cord = computer? getCoordinate(true) : getCoordinate(false);
 
             xCord = cord.getX();
             yCord = cord.getY();
@@ -42,15 +44,20 @@ public class Player {
      * Places all the ships for this player or computer.
      */
     public void placeShips(Ship[] shipContainer, boolean computer){
-        boolean moveOn = true;
-        boolean overlaps = false;
         Coordinate cord1;
         Coordinate cord2;
+        setCoordinateBoard();
+        setHitsArray();
+        printCoordinateBoard();
         fillShipBoard(placedShipsBoard);
+        boolean enoughSpace ;
+        boolean overlaps;
+        boolean isValid;
+        boolean rowsTheSame;
 
         for(Ship ship : shipContainer){
-            //Getting starting coordinates and ending coordinates.
-            if(computer != true){
+//Getting starting coordinates and ending coordinates.
+            if(!computer){
                 do {
                     askShipQuestion(ship);
 
@@ -61,20 +68,22 @@ public class Player {
                     cord2 = getCoordinate(false);
 
                     //if both x coordinates (rows) are the same, then check the distance between x coordinates
-                    if (cord1.getX() == cord2.getX()) {
-                        moveOn = checkSpace(ship, cord1.getY(), cord2.getY());
-                        overlaps = checkOverlap(cord1.getX(), cord1.getY(), cord2.getX(), cord2.getY());
+                    if (sameNum(cord1.getX(), cord2.getX())) {
+                        enoughSpace = checkSpace(ship, cord1.getY(), cord2.getY());
+                        overlaps = checkOverlap(cord1, cord2);
+                        isValid = placeable(enoughSpace, overlaps);
                     }
                     //if both y coordinates (cols) are the same, then check the distance between y coordinates
-                    else if (cord1.getY() == cord2.getY()) {
-                        moveOn = checkSpace(ship, cord1.getX(), cord2.getX());
-                        overlaps = checkOverlap(cord1.getX(), cord1.getY(), cord2.getX(), cord2.getY());
+                    else if (sameNum(cord1.getY(), cord2.getY())) {
+                        enoughSpace = checkSpace(ship, cord1.getX(), cord2.getX());
+                        overlaps = checkOverlap(cord1, cord2);
+                        isValid = placeable(enoughSpace, overlaps);
                     } else {
-                        moveOn = false;
+                        isValid = false;
                         System.out.println("Invalid Coordinates.");
                     }
 
-                }while(!moveOn || overlaps);
+                }while(!isValid);
             }
 
             else{
@@ -82,47 +91,47 @@ public class Player {
                 do{
                     cord1 = getCoordinate(true);
                     cord2 = getCoordinate(true);
-                    if(cord1.getX() == cord2.getX()){
-                        moveOn = checkSpace(ship, cord1.getY(), cord2.getY());
-                        overlaps = checkOverlap(cord1.getX(), cord1.getY(), cord2.getX(), cord2.getY());
+                    if(sameNum(cord1.getX(), cord2.getX())){
+                        enoughSpace = checkSpace(ship, cord1.getY(), cord2.getY());
+                        overlaps = checkOverlap(cord1, cord2);
+                        isValid = placeable(enoughSpace, overlaps);
                     }
                     else{
-                        moveOn = checkSpace(ship, cord1.getX(), cord2.getX());
-                        overlaps = checkOverlap(cord1.getX(), cord1.getY(), cord2.getX(), cord2.getY());
+                        enoughSpace = checkSpace(ship, cord1.getX(), cord2.getX());
+                        overlaps = checkOverlap(cord1, cord2);
+                        isValid =  placeable(enoughSpace, overlaps);
                     }
-                }while(overlaps || !moveOn);
+                }while(!isValid);
             }
-
-            //place ship in placedShipBoard considering cord1 and cord2.
             // if rows are the same.
-            if(cord1.getX() == cord2.getX()){
-                //check which way coordinates are oriented and place ship taking that into account.
-                if(cord1.getY() < cord2.getY()) {
-                    for (int j = cord1.getY(); j <= cord2.getY(); j++) {
-                        placedShipsBoard[cord1.getX()][j] = ship.getShipChar(ship);
-                    }
-                }
-                else{
-                    for(int j = cord2.getY(); j<= cord1.getY(); j++){
-                        placedShipsBoard[cord1.getX()][j] = ship.getShipChar(ship);
-                    }
-                }
+            if(sameNum(cord1.getX(), cord2.getX())){
+                placeTheShip(true, cord1, cord1.getY(), cord2.getY(), ship);
             }
             //if cols are the same
             else{
-                //check which way coordinates are oriented and place ship taking that into account.
-                if(cord1.getX() < cord2.getX()) {
-                    for (int j = cord1.getX(); j <= cord2.getX(); j++) {
-                        placedShipsBoard[j][cord1.getY()] = ship.getShipChar(ship);
-                    }
-                }
-                else{
-                    for(int j = cord2.getX(); j<= cord1.getX(); j++) {
-                        placedShipsBoard[j][cord1.getY()] = ship.getShipChar(ship);
-                    }
-                }
+                placeTheShip(false, cord1, cord1.getX(), cord2.getX(), ship);
             }
             printPlaceShipsBoard();
+        }
+    }
+    //Coordinate x or y value is greater than another Coordinate, this method places the ship taking into account their values.
+    public void placeTheShip(boolean rowsTheSame, Coordinate cord, int cord1XY, int cord2XY, Ship ship){
+        int max = Math.max(cord1XY, cord2XY);
+        int min = Math.min(cord1XY, cord2XY);
+        int oppCord;
+        //rows same
+        if(rowsTheSame) {
+            oppCord = cord.getX();
+            for(int j = min; j<= max; j++){
+                placedShipsBoard[oppCord][j] = ship.getShipChar(ship);
+            }
+        }
+        //cols same
+        else{
+            oppCord = cord.getY();
+            for (int j = min; j <= max; j++) {
+                placedShipsBoard[j][oppCord] = ship.getShipChar(ship);
+            }
         }
     }
 
@@ -148,25 +157,30 @@ public class Player {
             for(int col = 0; col<coordinateBoard[0].length; col++){
                 //Printing the nums on the side of the board
                 if(col == 0) System.out.print(rowNum++);
-                //printing placedShipsBoard vals as '~' if no ship there, else printing the symbol of the ship.
+                //printing placedShipsBoard values as '~' if no ship there, else printing the symbol of the ship.
                 System.out.print(placedShipsBoard[row][col]);
             }
         }
         System.out.println("\n");
     }
 
+    public boolean placeable(boolean enoughSpace, boolean overlaps){
+        return enoughSpace && !overlaps;
+    }
+    public boolean sameNum(int cord1, int cord2){
+        return (cord1 == cord2);
+    }
+
     /**
-     *
-     * @param xCord1 - x Coordinate of cord1
-     * @param yCord1 - y Coordinate of cord1
-     * @param xCord2 - x Coordinate of cord2
-     * @param yCord2 - y Coordinate of cord2
-     * @return true if there is a char of a ship between the selected coordinates
+     * @param cord1 - Starting Coordinate
+     * @param cord2 - Ending Coordinate
+     * @return true if there is a char of any ship between the selected coordinates
      */
-    private boolean checkOverlap(int xCord1, int yCord1, int xCord2, int yCord2){
+    private boolean checkOverlap(Coordinate cord1, Coordinate cord2){
         boolean val = false;
+        int xCord1 = cord1.getX(); int yCord1 = cord1.getY(); int xCord2 = cord2.getX(); int yCord2 = cord2.getY();
         //rows same
-        if(xCord1 == xCord2){
+        if(sameNum(xCord1, xCord2)){
             if(yCord1 < yCord2) {
                 for (int i = yCord1; i <= yCord2; i++) {
                     if (placedShipsBoard[xCord1][i] != '~') {
@@ -212,16 +226,16 @@ public class Player {
 
     /**
      * Checks to see if there space with the chosen coordinates is equal to the length of the ship.
-     * @param ship
-     * @param a
-     * @param b
+     * @param ship - The ship that is being taken into account
+     * @param a - Starting coordinate value
+     * @param b - Ending coordinate value
      * @return boolean value if there is enough space between the two integer values.
      */
     private boolean checkSpace(Ship ship, int a, int b){
         if(a==b) return false;
         int space = (a>b)? (a-b) + 1 : (b-a) + 1;
-        boolean val = (ship.getShipLength(ship)==space)? true : false;
-        if(val == false) System.out.println("Invalid Coordinates. Please take ship length into account.\n");
+        boolean val = (ship.getShipLength(ship)==space);
+        if(!val) System.out.println("Invalid Coordinates. Please take ship length into account.\n");
         return val;
     }
 
@@ -234,11 +248,10 @@ public class Player {
         int count = 0;
         for(int row = 0; row < visited[0].length; row++){
             for(int col = 0; col < visited[0].length; col++){
-               if(visited[row][col] == true) count++;
+               if(visited[row][col]) count++;
             }
         }
-        boolean val = (count == 17)? true : false;
-        return val;
+        return (count == 17);
     }
 
     /**
@@ -267,7 +280,7 @@ public class Player {
                //Printing the nums on the side of the board
                 if(col == 0) System.out.print(rowNum++);
                 //printing coordinateBoard vals as '~' if ship isn't hit, else printing the symbol of the ship.
-                symbol = visited[row][col]!= true? '~' : coordinateBoard[row][col];
+                symbol = !visited[row][col]? '~' : coordinateBoard[row][col];
                 System.out.print(symbol);
             }
         }
@@ -319,7 +332,8 @@ public class Player {
      *
      * @return Coordinate value the player has typed in.
      */
-    public Coordinate getCoordinate(boolean computer) {
+    private Coordinate getCoordinate(boolean computer) {
+        Scanner sc;
         String input;
         String xCordIn; String yCordIn;
         int xCord; int yCord;
@@ -327,11 +341,11 @@ public class Player {
         boolean moveOn;
         Coordinate cord;
 //Getting coordinates from a player
-        if(computer != true) {
+        if(!computer) {
             do {
                 moveOn = true;
                 if (count > 0) System.out.println("Enter the coordinates again.");
-                Scanner sc = new Scanner(System.in);
+                sc = new Scanner(System.in);
                 input = sc.nextLine();
                 count++;
                 //Check for length being 2.
@@ -340,9 +354,10 @@ public class Player {
                     moveOn = false;
                     continue;
                 }
+                //checking if it's parsable
                 try {
                     Integer.parseInt(input);
-                } catch (NumberFormatException e) {   //checking if it's parsable
+                } catch (NumberFormatException e) {
                     moveOn = false;
                 }
             } while (!moveOn);
@@ -353,13 +368,14 @@ public class Player {
         }
 //Getting coordinates from a computer
         else{
-            xCord = getRandomNum();
-            yCord = getRandomNum();
+            xCord = randomNum();
+            yCord = randomNum();
             cord = new Coordinate(xCord, yCord);
         }
         return cord;
     }
-    public int getRandomNum(){
+    private int randomNum(){
         return (int) Math.floor(Math.random()*10);
     }
+
 }

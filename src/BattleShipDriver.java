@@ -1,9 +1,13 @@
 /**
  * Created by AJ on 12/23/14.
  */
+import java.util.Scanner;
 public class BattleShipDriver {
     public static void main(String[] args){
+        Scanner sc;
+        String input;
         char hit;
+
         Ship aircraft = new Ship('A',5);
         Ship battleship = new Ship('B',4);
         Ship cruiser = new Ship('C',3);
@@ -31,8 +35,8 @@ public class BattleShipDriver {
         makeSpace();
 
         do{
+            askQuestion("p1", "p2");
             do {
-                askQuestion("p1", "p2");
                 hit = p2.fireUpon(false);
                 giveResult(hit);
                 if (p2.lost()) break;
@@ -43,8 +47,8 @@ public class BattleShipDriver {
                 break;
             }
 
+            askQuestion("p2", "p1");
             do {
-                askQuestion("p2", "p1");
                 hit = p1.fireUpon(false);
                 giveResult(hit);
                 if (p1.lost()) break;
@@ -62,14 +66,11 @@ public class BattleShipDriver {
             System.out.println("You Missed!");
         }
         else{
-            System.out.println("You hit a ship!");
+            System.out.println("You hit a ship!\n Enter another coordinate: (Example: 00)");
         }
     }
 
     private static void initialize(Player player, Ship[] shipContainer, boolean computer){
-        player.printCoordinateBoard();
-        player.setCoordinateBoard();
-        player.setHitsArray();
         player.placeShips(shipContainer, computer);
     }
     private static void askQuestion(String player1, String player2){
