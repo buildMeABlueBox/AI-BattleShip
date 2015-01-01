@@ -2,7 +2,6 @@
  * Created by AJ on 12/23/14.
  */
 import java.util.Scanner;
-import java.util.Random;
 public class Player {
     private char[][] coordinateBoard = new char[10][10];
     private char[][] placedShipsBoard = new char[10][10];
@@ -44,16 +43,9 @@ public class Player {
      * Places all the ships for this player or computer.
      */
     public void placeShips(Ship[] shipContainer, boolean computer){
-        Coordinate cord1;
-        Coordinate cord2;
-        setCoordinateBoard();
-        setHitsArray();
-        printCoordinateBoard();
-        fillShipBoard(placedShipsBoard);
-        boolean enoughSpace ;
-        boolean overlaps;
-        boolean isValid;
-        boolean rowsTheSame;
+        Coordinate cord1, cord2;
+        boolean enoughSpace, overlaps, isValid, rowsTheSame;
+        initializeBoards();
 
         for(Ship ship : shipContainer){
 //Getting starting coordinates and ending coordinates.
@@ -103,32 +95,38 @@ public class Player {
                     }
                 }while(!isValid);
             }
-            // if rows are the same.
-            if(sameNum(cord1.getX(), cord2.getX())){
-                placeTheShip(true, cord1, cord1.getY(), cord2.getY(), ship);
-            }
-            //if cols are the same
-            else{
-                placeTheShip(false, cord1, cord1.getX(), cord2.getX(), ship);
-            }
+            rowsTheSame = sameNum(cord1.getX(), cord2.getX());
+            placeTheShip(rowsTheSame, cord1, cord2, ship);
             printPlaceShipsBoard();
         }
     }
+    private void initializeBoards(){
+        setCoordinateBoard();
+        setHitsArray();
+        printCoordinateBoard();
+        fillShipBoard(placedShipsBoard);
+    }
     //Coordinate x or y value is greater than another Coordinate, this method places the ship taking into account their values.
-    public void placeTheShip(boolean rowsTheSame, Coordinate cord, int cord1XY, int cord2XY, Ship ship){
-        int max = Math.max(cord1XY, cord2XY);
-        int min = Math.min(cord1XY, cord2XY);
-        int oppCord;
+    private void placeTheShip(boolean rowsTheSame, Coordinate cord1, Coordinate cord2, Ship ship){
+        int cord1XY, cord2XY, max, min, oppCord;
         //rows same
         if(rowsTheSame) {
-            oppCord = cord.getX();
+            cord1XY = cord1.getY();
+            cord2XY = cord2.getY();
+            max = Math.max(cord1XY, cord2XY);
+            min = Math.min(cord1XY, cord2XY);
+            oppCord = cord1.getX();
             for(int j = min; j<= max; j++){
                 placedShipsBoard[oppCord][j] = ship.getShipChar(ship);
             }
         }
         //cols same
         else{
-            oppCord = cord.getY();
+            cord1XY = cord1.getX();
+            cord2XY = cord2.getX();
+            max = Math.max(cord1XY, cord2XY);
+            min = Math.min(cord1XY, cord2XY);
+            oppCord = cord1.getY();
             for (int j = min; j <= max; j++) {
                 placedShipsBoard[j][oppCord] = ship.getShipChar(ship);
             }
@@ -139,7 +137,7 @@ public class Player {
      * Prints the board after each respective ship is placed.
      */
     private void printPlaceShipsBoard() {
-        int rowNum = 0; int colNum = -1;
+        int rowNum = 0, colNum = -1;
         for (int row = 0; row < coordinateBoard[0].length;row++) {
             if(row!=0) System.out.println();
             else{
@@ -164,10 +162,10 @@ public class Player {
         System.out.println("\n");
     }
 
-    public boolean placeable(boolean enoughSpace, boolean overlaps){
+    private boolean placeable(boolean enoughSpace, boolean overlaps){
         return enoughSpace && !overlaps;
     }
-    public boolean sameNum(int cord1, int cord2){
+    private boolean sameNum(int cord1, int cord2){
         return (cord1 == cord2);
     }
 
@@ -178,7 +176,7 @@ public class Player {
      */
     private boolean checkOverlap(Coordinate cord1, Coordinate cord2){
         boolean val = false;
-        int xCord1 = cord1.getX(); int yCord1 = cord1.getY(); int xCord2 = cord2.getX(); int yCord2 = cord2.getY();
+        int xCord1 = cord1.getX(), yCord1 = cord1.getY(), xCord2 = cord2.getX(), yCord2 = cord2.getY();
         //rows same
         if(sameNum(xCord1, xCord2)){
             if(yCord1 < yCord2) {
@@ -258,10 +256,9 @@ public class Player {
      * Prints this player's coordinate Board.
      *
      */
-    public void printCoordinateBoard(){
+    private void printCoordinateBoard(){
         char symbol;
-        int rowNum = 0;
-        int colNum = -1;
+        int rowNum = 0, colNum = -1;
         for (int row = 0; row < coordinateBoard[0].length;row++) {
            if(row!=0) System.out.println();
             else{
@@ -287,7 +284,7 @@ public class Player {
         System.out.println("\n");
     }
 
-    public void setHitsArray(){
+    private void setHitsArray(){
         for(int row = 0; row < visited[0].length; row++){
             for(int col = 0; col < visited[0].length; col++){
                 visited[row][col] = false;
@@ -298,7 +295,7 @@ public class Player {
     /**
      * initializes coordinateBoard to '~' (only used for coordinate board for a player)
       */
-    public void setCoordinateBoard(){
+    private void setCoordinateBoard(){
         for(int row = 0; row < visited[0].length; row++){
             for(int col = 0; col < visited[0].length; col++){
                 coordinateBoard[row][col] = '~';
@@ -334,10 +331,8 @@ public class Player {
      */
     private Coordinate getCoordinate(boolean computer) {
         Scanner sc;
-        String input;
-        String xCordIn; String yCordIn;
-        int xCord; int yCord;
-        int count = 0;
+        String input, xCordIn, yCordIn;
+        int xCord, yCord, count = 0;
         boolean moveOn;
         Coordinate cord;
 //Getting coordinates from a player
