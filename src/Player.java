@@ -3,9 +3,9 @@
  */
 import java.util.Scanner;
 public class Player {
-    private char[][] coordinateBoard = new char[10][10];
-    private char[][] placedShipsBoard = new char[10][10];
-    private boolean[][] visited = new boolean[10][10];
+    CoordinateBoard coordinateBoard = new CoordinateBoard();
+    CoordinateBoard placedShipsBoard = new CoordinateBoard();
+    VisitedBoard visited = new VisitedBoard();
 
     public Player(){
 
@@ -25,17 +25,17 @@ public class Player {
             xCord = cord.getX();
             yCord = cord.getY();
             //player has already hit this target.
-            if (visited[xCord][yCord]){
+            if (visited.visitedArr[xCord][yCord]){
                 System.out.println("You've already chosen this coordinate before. Choose another one.");
                 moveOn = false;
             }
         }while(!moveOn);
         
         //update visited/coordinate boards. For coordinate board: M for miss, H for Hit.
-        coordinateBoard[xCord][yCord] = (placedShipsBoard[xCord][yCord] == '~')? 'M' : 'H';
-        visited[xCord][yCord] = true;
+        coordinateBoard.charArr[xCord][yCord] = (placedShipsBoard.charArr[xCord][yCord] == '~')? 'M' : 'H';
+        visited.visitedArr[xCord][yCord] = true;
         printCoordinateBoard();
-        return coordinateBoard[xCord][yCord];
+        return coordinateBoard.charArr[xCord][yCord];
     }
 
 
@@ -45,7 +45,7 @@ public class Player {
     public void placeShips(Ship[] shipContainer, boolean computer){
         Coordinate cord1, cord2;
         boolean enoughSpace, overlaps, isValid, rowsTheSame;
-        initializeBoards();
+        printCoordinateBoard();
 
         for(Ship ship : shipContainer){
 //Getting starting coordinates and ending coordinates.
@@ -100,12 +100,7 @@ public class Player {
             printPlaceShipsBoard();
         }
     }
-    private void initializeBoards(){
-        setCoordinateBoard();
-        setHitsArray();
-        printCoordinateBoard();
-        fillShipBoard(placedShipsBoard);
-    }
+
     //Coordinate x or y value is greater than another Coordinate, this method places the ship taking into account their values.
     private void placeTheShip(boolean rowsTheSame, Coordinate cord1, Coordinate cord2, Ship ship){
         int cord1XY, cord2XY, max, min, oppCord;
@@ -117,7 +112,7 @@ public class Player {
             min = Math.min(cord1XY, cord2XY);
             oppCord = cord1.getX();
             for(int j = min; j<= max; j++){
-                placedShipsBoard[oppCord][j] = ship.getShipChar(ship);
+                placedShipsBoard.charArr[oppCord][j] = ship.getShipChar(ship);
             }
         }
         //cols same
@@ -128,7 +123,7 @@ public class Player {
             min = Math.min(cord1XY, cord2XY);
             oppCord = cord1.getY();
             for (int j = min; j <= max; j++) {
-                placedShipsBoard[j][oppCord] = ship.getShipChar(ship);
+                placedShipsBoard.charArr[j][oppCord] = ship.getShipChar(ship);
             }
         }
     }
@@ -138,7 +133,7 @@ public class Player {
      */
     private void printPlaceShipsBoard() {
         int rowNum = 0, colNum = -1;
-        for (int row = 0; row < coordinateBoard[0].length;row++) {
+        for (int row = 0; row < coordinateBoard.charArr[0].length;row++) {
             if(row!=0) System.out.println();
             else{
                 // Printing the numbers on top of the board
@@ -152,11 +147,11 @@ public class Player {
                 }
                 System.out.println();
             }
-            for(int col = 0; col<coordinateBoard[0].length; col++){
+            for(int col = 0; col<coordinateBoard.charArr[0].length; col++){
                 //Printing the nums on the side of the board
                 if(col == 0) System.out.print(rowNum++);
                 //printing placedShipsBoard values as '~' if no ship there, else printing the symbol of the ship.
-                System.out.print(placedShipsBoard[row][col]);
+                System.out.print(placedShipsBoard.charArr[row][col]);
             }
         }
         System.out.println("\n");
@@ -181,7 +176,7 @@ public class Player {
         if(sameNum(xCord1, xCord2)){
             if(yCord1 < yCord2) {
                 for (int i = yCord1; i <= yCord2; i++) {
-                    if (placedShipsBoard[xCord1][i] != '~') {
+                    if (placedShipsBoard.charArr[xCord1][i] != '~') {
                         val = true;
                         System.out.println("There is a ship placed between the selected coordinates.");
                         break;
@@ -190,7 +185,7 @@ public class Player {
             }
             else{
                 for (int i = yCord2; i <= yCord1; i++) {
-                    if (placedShipsBoard[xCord1][i] != '~') {
+                    if (placedShipsBoard.charArr[xCord1][i] != '~') {
                         val = true;
                         System.out.println("There is a ship placed between the selected coordinates.");
                         break;
@@ -202,7 +197,7 @@ public class Player {
         else{
             if(xCord1 < xCord2) {
                 for (int i = xCord1; i <= xCord2; i++) {
-                    if (placedShipsBoard[i][yCord1] != '~') {
+                    if (placedShipsBoard.charArr[i][yCord1] != '~') {
                         val = true;
                         System.out.println("There is a ship placed between the selected coordinates.");
                         break;
@@ -211,7 +206,7 @@ public class Player {
             }
             else{
                 for (int i = xCord2; i <= xCord1; i++) {
-                    if (placedShipsBoard[i][yCord1] != '~') {
+                    if (placedShipsBoard.charArr[i][yCord1] != '~') {
                         val = true;
                         System.out.println("There is a ship placed between the selected coordinates.");
                         break;
@@ -244,9 +239,9 @@ public class Player {
      */
     public boolean lost(){
         int count = 0;
-        for(int row = 0; row < visited[0].length; row++){
-            for(int col = 0; col < visited[0].length; col++){
-               if(visited[row][col]) count++;
+        for(int row = 0; row < coordinateBoard.charArr[0].length; row++){
+            for(int col = 0; col < coordinateBoard.charArr[0].length; col++){
+               if(coordinateBoard.charArr[row][col] == 'H') count++;
             }
         }
         return (count == 17);
@@ -259,7 +254,7 @@ public class Player {
     private void printCoordinateBoard(){
         char symbol;
         int rowNum = 0, colNum = -1;
-        for (int row = 0; row < coordinateBoard[0].length;row++) {
+        for (int row = 0; row < coordinateBoard.charArr[0].length;row++) {
            if(row!=0) System.out.println();
             else{
                // Printing the numbers on top of the board
@@ -273,47 +268,15 @@ public class Player {
                 }
                System.out.println();
             }
-            for(int col = 0; col<coordinateBoard[0].length; col++){
+            for(int col = 0; col<coordinateBoard.charArr[0].length; col++){
                //Printing the nums on the side of the board
                 if(col == 0) System.out.print(rowNum++);
                 //printing coordinateBoard vals as '~' if ship isn't hit, else printing the symbol of the ship.
-                symbol = !visited[row][col]? '~' : coordinateBoard[row][col];
+                symbol = !visited.visitedArr[row][col]? '~' : coordinateBoard.charArr[row][col];
                 System.out.print(symbol);
             }
         }
         System.out.println("\n");
-    }
-
-    private void setHitsArray(){
-        for(int row = 0; row < visited[0].length; row++){
-            for(int col = 0; col < visited[0].length; col++){
-                visited[row][col] = false;
-            }
-        }
-    }
-
-    /**
-     * initializes coordinateBoard to '~' (only used for coordinate board for a player)
-      */
-    private void setCoordinateBoard(){
-        for(int row = 0; row < visited[0].length; row++){
-            for(int col = 0; col < visited[0].length; col++){
-                coordinateBoard[row][col] = '~';
-            }
-        }
-    }
-
-    /**
-     * initializes placedShipsBoard to '~'.
-     *
-     * @param placedShipsBoard - ship placement board
-     */
-    private void fillShipBoard(char[][] placedShipsBoard){
-        for(int row = 0; row < visited[0].length; row++){
-            for(int col = 0; col < visited[0].length; col++){
-                placedShipsBoard[row][col] = '~';
-            }
-        }
     }
 
     /**
